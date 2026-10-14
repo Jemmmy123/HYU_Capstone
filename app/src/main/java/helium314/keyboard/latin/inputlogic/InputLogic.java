@@ -162,6 +162,7 @@ public final class InputLogic {
      * @param settingsValues the current settings values
      */
     public void startInput(final String combiningSpec, final SettingsValues settingsValues) {
+        PrivacyFilter.dropPendingLearning();
         mEnteredText = null;
         mWordBeingCorrectedByCursor = null;
         mConnection.onStartInput();
@@ -218,6 +219,7 @@ public final class InputLogic {
      * Clean up the input logic after input is finished.
      */
     public void finishInput() {
+        PrivacyFilter.dropPendingLearning();
         if (mWordComposer.isComposingWord()) {
             mConnection.finishComposingText();
             StatsUtils.onWordCommitUserTyped(mWordComposer.getTypedWord(), mWordComposer.isBatchMode());
@@ -1179,6 +1181,10 @@ public final class InputLogic {
             } else {
                 commitTyped(settingsValues, StringUtils.newSingleCodePointString(codePoint));
             }
+        }
+
+        if (Character.isWhitespace(codePoint)) {
+            PrivacyFilter.finishChunk(mConnection.getTextBeforeCursor(64, 0), mLatinIME);
         }
 
         final boolean swapWeakSpace = tryStripSpaceAndReturnWhetherShouldSwapInstead(event, inputTransaction);
@@ -2183,6 +2189,7 @@ public final class InputLogic {
     // TODO: how is this different from startInput ?!
     private void resetEntireInputState(final int newSelStart, final int newSelEnd,
             final boolean clearSuggestionStrip) {
+        PrivacyFilter.dropPendingLearning();
         final boolean shouldFinishComposition = mWordComposer.isComposingWord();
         resetComposingState(true /* alsoResetLastComposedWord */);
         if (clearSuggestionStrip) {
@@ -2490,8 +2497,12 @@ public final class InputLogic {
                     + "Connection.commitText");
             startTimeMillis = SystemClock.elapsedRealtime();
         }
-        // Add the word to the user history dictionary
-        performAdditionToUserHistoryDictionary(settingsValues, chosenWord, ngramContext);
+        // Add the word to the user history dictionary, or wait if it may be part of a chunk like "Tiger!42"
+        if (PrivacyFilter.shouldDeferLearning(separatorString)) {
+            PrivacyFilter.deferLearning(() -> performAdditionToUserHistoryDictionary(settingsValues, chosenWord, ngramContext));
+        } else {
+            performAdditionToUserHistoryDictionary(settingsValues, chosenWord, ngramContext);
+        }
         if (DebugFlags.DEBUG_ENABLED) {
             long runTimeMillis = SystemClock.elapsedRealtime() - startTimeMillis;
             Log.d(TAG, "commitChosenWord() : " + runTimeMillis + " ms to run "

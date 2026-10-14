@@ -56,6 +56,25 @@ class SensitiveWordDetectorTest {
         assertEquals(Type.AFTER_TRIGGER_WORD, detect("bluefish", "is", "password"))
     }
 
+    @Test fun simplePasswords() {
+        assertEquals(Type.PASSWORD_LIKE, detect("dragon42"))
+        assertEquals(Type.PASSWORD_LIKE, detect("maple23"))
+        assertEquals(Type.PASSWORD_LIKE, detect("T1g3r"))
+        assertEquals(Type.PASSWORD_LIKE, detect("Dr4g0n"))
+        for (w in listOf("mp3", "b2b", "i18n", "x86", "Win10", "3rd"))
+            assertNull(detect(w), w)
+    }
+
+    @Test fun moreTriggerPhrases() {
+        assertEquals(Type.AFTER_TRIGGER_WORD, detect("letmein", "with", "login"))
+        assertEquals(Type.AFTER_TRIGGER_WORD, detect("falcon", "is", "code", "the"))
+        assertEquals(Type.AFTER_TRIGGER_WORD, detect("falcon", "code:"))
+        assertNull(detect("review", "code", "the"))
+        assertNull(detect("manager", "password", "the"))
+        assertNull(detect("game", "card", "the"))
+        assertNull(detect("locked", "was", "account", "my"))
+    }
+
     @Test fun normalWordsAreLearned() {
         for (w in listOf("hello", "Hello", "keyboard", "don't", "e-mail", "2026", "10:30", "COVID-19", "iPhone", "mp3", "B2B", "x86_64", ""))
             assertNull(detect(w), w)

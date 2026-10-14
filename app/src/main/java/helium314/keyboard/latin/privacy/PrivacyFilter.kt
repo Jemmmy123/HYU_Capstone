@@ -27,6 +27,13 @@ object PrivacyFilter {
     @JvmStatic
     var wordForgetter: WordForgetter? = null
 
+    /**
+     * The keyboard ends a word at symbols like '!', so "Tiger!42" would learn "Tiger" on its own.
+     * Words ended by a symbol wait here until the chunk ends at whitespace and the whole chunk can be checked.
+     * Only touched on the input thread.
+     */
+    private val pendingLearning = mutableListOf<Runnable>()
+
     private var cachedUserList: UserBlockList? = null
     private var cachedUserListSource: Pair<String, Set<String>>? = null
 
@@ -43,6 +50,43 @@ object PrivacyFilter {
         if (type == null) return false
         Log.i(TAG, "not learning a word of type $type")
         return true
+    }
+
+    /** @return true if learning of a word committed by [separator] must wait for the rest of the chunk. */
+    @JvmStatic
+    fun shouldDeferLearning(separator: String?): Boolean =
+        pendingLearning.isNotEmpty() || (!separator.isNullOrEmpty() && !Character.isWhitespace(separator.codePointAt(0)))
+
+    @JvmStatic
+    fun deferLearning(learn: Runnable) {
+        pendingLearning += learn
+    }
+
+    /**
+     * Called when whitespace ends a chunk. Learns the waiting words, unless the chunk as a whole is sensitive.
+     * @param textBeforeCursor text before the cursor, the chunk is the part after the last whitespace
+     */
+    @JvmStatic
+    fun finishChunk(textBeforeCursor: CharSequence?, context: Context) {
+        if (pendingLearning.isEmpty()) return
+        val waiting = pendingLearning.toList()
+        pendingLearning.clear()
+        val text = textBeforeCursor?.toString()
+        val chunk = text?.substring(text.indexOfLast { it.isWhitespace() } + 1)
+        val type = if (chunk == null) null else SensitiveWordDetector.detect(chunk, emptyList(), userBlockList(context))
+        if (chunk == null || type != null) {
+            // unknown or sensitive chunk: learn none of its parts
+            if (type != null) countBlocked(context, type)
+            Log.i(TAG, "not learning ${waiting.size} parts of a chunk of type $type")
+            return
+        }
+        waiting.forEach { it.run() }
+    }
+
+    /** The chunk was left without whitespace (cursor moved, input finished): forget the waiting words. */
+    @JvmStatic
+    fun dropPendingLearning() {
+        pendingLearning.clear()
     }
 
     private fun countBlocked(context: Context, type: SensitiveWordDetector.Type) {
