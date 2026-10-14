@@ -1,39 +1,42 @@
 # HYU_Capstone: 민감정보를 학습하지 않는 키보드
 
-오픈소스 안드로이드 키보드 [HeliBoard](https://github.com/Helium314/HeliBoard)를 수정해,
-비밀번호·카드번호·이메일 같은 민감정보가 키보드의 학습 사전(user history dictionary)에 저장되지 않도록 한 캡스톤 프로젝트입니다.
-원본 HeliBoard 커밋 `0c60dff` 위에 변경 사항을 추가했으며, 아래 원본 README는 그대로 두었습니다.
+졸업 프로젝트. 오픈소스 안드로이드 키보드 [HeliBoard](https://github.com/Helium314/HeliBoard)(GPL-3.0)를 고쳐서, 비밀번호·이메일·계좌번호 같은 민감한 단어가 단어 추천 학습 사전에 저장되지 않게 했습니다. 영어 입력이 대상입니다.
 
-## 주요 기능
-- **민감 단어 탐지 후 학습 차단** (`app/src/main/java/helium314/keyboard/latin/privacy/`)
-  - 카드번호(Luhn 검사), 전화번호, 이메일, 비밀번호 형태(대소문자·숫자·기호 조합, 단어+숫자, leetspeak), 긴 숫자
-  - "password is X", "login with X", "the code is X"처럼 트리거 단어 뒤에 오는 단어
-  - `Tiger!42`처럼 기호로 나뉜 덩어리는 공백이 올 때까지 기다렸다가 전체를 검사
-  - 민감 단어는 다음 단어 예측용 문맥(n-gram)에서도 제외
-- **사용자 단어 목록 (Words never to learn)**: 사용자가 직접 추가한 단어는 학습하지 않으며, 단어 대신 salt+SHA-256 해시와 마스크(`b•••••••`)만 저장. 추가할 때 이미 학습된 단어는 사전에서 지우고 파일을 재구성
-- **차단 통계**: 설정 → Advanced에서 종류별 차단 개수 확인 (단어는 저장하지 않음)
-- **시크릿 모드 표시**: 학습이 꺼져 있으면 키보드 영역이 파란색으로 표시
-- 탐지 규칙은 현재 영어 입력 기준
+## 무엇을 바꿨나
 
-## 구성
-| 경로 | 내용 |
-|---|---|
-| `app/src/main/java/helium314/keyboard/latin/privacy/` | 탐지(`SensitiveWordDetector`), 학습 필터(`PrivacyFilter`), 사용자 목록(`UserBlockList`), 시크릿 표시(`IncognitoIndicator`) |
-| `app/src/test/java/helium314/keyboard/latin/privacy/` | 단위 테스트 |
-| `KeyboardTestApp/` | 키보드를 시험하기 위한 테스트 앱 (별도 Gradle 프로젝트) |
+- **자동 탐지:** 단어가 학습 사전에 저장되기 직전에 검사합니다. 카드번호(Luhn), 전화번호, 이메일, SSN, 긴 숫자, 비밀번호처럼 생긴 단어, `password`·`pin`·`card`·`login` 같은 단어 바로 뒤의 단어를 막습니다.
+- **기호가 들어간 덩어리:** `Tiger!42`, `alex.kim@example.com`처럼 키보드가 기호에서 끊는 입력은 덩어리 전체로 판단해, 조각도 학습하지 않습니다.
+- **항상 보이는 시크릿 버튼:** 켜면 키보드가 파랗게 바뀌고 아무것도 학습하지 않습니다.
+- **차단 기록:** 설정 > Advanced > "Blocked from learning". 종류별 횟수만 저장합니다.
+- **학습 금지 단어 목록:** 설정 > Advanced > "Words never to learn". 단어는 salt를 붙인 해시로만 저장하고, 추가하는 순간 이미 학습된 단어도 사전 파일에서 지웁니다.
+
+새 코드는 대부분 `app/src/main/java/helium314/keyboard/latin/privacy/`에 있고, 원본 파일은 학습 지점 연결 등 최소한만 수정했습니다. HeliBoard 원본 기록 위에 이 프로젝트의 커밋이 올라가 있어 무엇을 바꿨는지 커밋으로 볼 수 있습니다.
+
+## 폴더
+
+| 폴더 | 내용 |
+| --- | --- |
+| `app/` | 키보드 (HeliBoard + 이 프로젝트의 수정) |
+| `KeyboardTestApp/` | 검증용 테스트 앱 (Kotlin, Jetpack Compose) |
+| `eval/` | 정확도 평가 프로그램과 결과 |
+
+## 평가 요약
+
+개선 전에 만들어 고정한 확인용 세트(4,696단어)에서, 실제로 학습되는 것을 기준으로 정밀도 0.97, 재현율 0.94, 일반 단어 오탐률 0.14%. 에뮬레이터에서 검사 한 번은 중앙값 약 0.05ms입니다. 자세한 내용은 `eval/README.md`를 보세요.
 
 ## 빌드
-```
-./gradlew assembleDebug                                   # 키보드 (패키지 helium314.keyboard.debug)
-./gradlew testDebugUnitTest --tests "*privacy*"           # 단위 테스트
-cd KeyboardTestApp && ./gradlew assembleDebug             # 테스트 앱
-```
-Android SDK 플랫폼 37, NDK 28.0.13004108, JDK 17 이상(Android Studio 내장 JBR 사용 가능)이 필요합니다.
 
-## 라이선스와 출처
-원본 [HeliBoard](https://github.com/Helium314/HeliBoard)(Helium314 외 기여자)를 기반으로 하며, 원본과 같은 **GPL-3.0** 라이선스를 따릅니다.
+Android Studio에서 이 폴더를 열고 `app`을 실행합니다. 디버그 빌드는 "HeliBoard debug"로 설치됩니다. 테스트 앱은 `KeyboardTestApp` 폴더를 따로 엽니다.
+
+## 라이선스
+
+HeliBoard와 같은 GPL-3.0입니다. 원본: https://github.com/Helium314/HeliBoard
+
+구현과 실험 자동화에는 AI 코딩 도구(Claude)를 활용했습니다. 기반 키보드 선정, 기능 범위, 평가 기준은 팀이 정했고, 결과는 에뮬레이터 실험과 고정한 확인용 세트로 검증했습니다.
 
 ---
+
+아래는 원본 HeliBoard의 README입니다.
 
 # HeliBoard
 HeliBoard is a privacy-conscious and customizable open-source keyboard, based on AOSP / OpenBoard.
