@@ -4,4 +4,12 @@
     <string name="privacy_blocked_title">Blocked from learning</string>
     <string name="privacy_blocked_none">Nothing blocked yet. Only counts are kept, never the words.</string>
     <string name="privacy_blocked_reset_hint">Only counts are kept, never the words. Tap to reset.</string>
+    <string name="privacy_user_list_title">Words never to learn</string>
+    <string name="privacy_user_list_summary_empty">Add your own secret words that automatic detection can\'t recognize.</string>
+    <string name="privacy_user_list_summary">%d words. Stored as hashes, not as text.</string>
+    <string name="privacy_user_list_info">These words are never learned or used as context. Only a hash of each word is stored, so the list shows just the first letter and length.</string>
+    <string name="privacy_user_list_empty">No words yet.</string>
+    <string name="privacy_user_list_add">Add word</string>
+    <string name="privacy_user_list_add_info">One word, without spaces. It is also removed from what the keyboard already learned.</string>
+    <string name="privacy_user_list_duplicate">This word is already in the list</string>
 </resources>

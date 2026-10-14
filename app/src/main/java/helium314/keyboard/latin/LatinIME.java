@@ -47,6 +47,7 @@ import helium314.keyboard.keyboard.emoji.EmojiSearchActivity;
 import helium314.keyboard.keyboard.emoji.EmojiSearchActivityKt;
 import helium314.keyboard.keyboard.internal.KeyboardIconsSet;
 import helium314.keyboard.keyboard.internal.keyboard_parser.floris.KeyCode;
+import helium314.keyboard.latin.privacy.PrivacyFilter;
 import helium314.keyboard.latin.common.InsetsOutlineProvider;
 import helium314.keyboard.dictionarypack.DictionaryPackConstants;
 import helium314.keyboard.event.Event;
@@ -548,6 +549,7 @@ public class LatinIME extends InputMethodService implements
     @Override
     public void onCreate() {
         mSettings.startListener();
+        PrivacyFilter.setWordForgetter(word -> mDictionaryFacilitator.removeFromUserHistory(word));
         KeyboardIconsSet.Companion.getInstance().loadIcons(this);
         mRichImm = RichInputMethodManager.getInstance();
         AudioAndHapticFeedbackManager.init(this);
@@ -705,6 +707,7 @@ public class LatinIME extends InputMethodService implements
 
     @Override
     public void onDestroy() {
+        PrivacyFilter.setWordForgetter(null);
         mClipboardHistoryManager.onDestroy();
         mDictionaryFacilitator.closeDictionaries();
         mSettings.onDestroy();

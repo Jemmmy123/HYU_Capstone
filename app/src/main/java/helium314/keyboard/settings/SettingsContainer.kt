@@ -85,4 +85,5 @@ object SettingsWithoutKey {
     const val CUSTOM_FONT = "custom_font"
     const val CUSTOM_EMOJI_FONT = "custom_emoji_font"
     const val PRIVACY_BLOCKED_STATS = "privacy_blocked_stats"
+    const val PRIVACY_USER_BLOCK_LIST = "privacy_user_block_list_screen"
 }

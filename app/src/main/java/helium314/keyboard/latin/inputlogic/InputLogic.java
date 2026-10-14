@@ -1732,7 +1732,7 @@ public final class InputLogic {
             return;
         }
         final int timeStampInSeconds = (int)TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis());
-        mDictionaryFacilitator.addToUserHistory(word, wasAutoCapitalized, PrivacyFilter.sanitize(ngramContext),
+        mDictionaryFacilitator.addToUserHistory(word, wasAutoCapitalized, PrivacyFilter.sanitize(ngramContext, mLatinIME),
                 timeStampInSeconds, settingsValues.mBlockPotentiallyOffensive);
     }
 
@@ -1751,7 +1751,7 @@ public final class InputLogic {
         mDictionaryFacilitator.addToUserHistory(
             text,
             false,
-            PrivacyFilter.sanitize(mConnection.getNgramContextFromNthPreviousWord(settingsValues.mSpacingAndPunctuations, 2)),
+            PrivacyFilter.sanitize(mConnection.getNgramContextFromNthPreviousWord(settingsValues.mSpacingAndPunctuations, 2), mLatinIME),
             (int) TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()),
             settingsValues.mBlockPotentiallyOffensive
         );

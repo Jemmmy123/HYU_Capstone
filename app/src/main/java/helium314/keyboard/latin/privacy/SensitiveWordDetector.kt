@@ -9,7 +9,7 @@ package helium314.keyboard.latin.privacy
  */
 object SensitiveWordDetector {
 
-    enum class Type { CARD_NUMBER, PHONE_NUMBER, EMAIL, SSN, LONG_NUMBER, PASSWORD_LIKE, AFTER_TRIGGER_WORD }
+    enum class Type { CARD_NUMBER, PHONE_NUMBER, EMAIL, SSN, LONG_NUMBER, PASSWORD_LIKE, AFTER_TRIGGER_WORD, USER_LIST }
 
     /** Words after which the next word is never learned, e.g. "password: hunter2" or "my pin is 1234". */
     private val TRIGGER_WORDS = setOf(
@@ -38,11 +38,13 @@ object SensitiveWordDetector {
     /**
      * @param word the word about to be learned
      * @param previousWords words typed before [word], nearest first (index 0 is the word right before)
+     * @param userList words the user added to never be learned
      * @return the kind of sensitive information, or null if the word may be learned
      */
-    fun detect(word: String, previousWords: List<String> = emptyList()): Type? {
+    fun detect(word: String, previousWords: List<String> = emptyList(), userList: UserBlockList? = null): Type? {
         val w = word.trim().trimEnd('.', ',', '!', '?', ';')
         if (w.isEmpty()) return null
+        if (userList != null && w in userList) return Type.USER_LIST
         detectByShape(w)?.let { return it }
         if (w.lowercase() in FUNCTION_WORDS) return null
         if (followsTriggerWord(previousWords)) return Type.AFTER_TRIGGER_WORD
@@ -50,7 +52,8 @@ object SensitiveWordDetector {
     }
 
     /** True if [word] alone looks sensitive, ignoring context. Used to clean previous-word context. */
-    fun isSensitive(word: String): Boolean = detectByShape(word.trim().trimEnd('.', ',', '!', '?', ';')) != null
+    fun isSensitive(word: String, userList: UserBlockList? = null): Boolean =
+        detectByShape(word.trim().trimEnd('.', ',', '!', '?', ';')) != null || (userList != null && word in userList)
 
     private fun detectByShape(w: String): Type? {
         if (w.isEmpty()) return null

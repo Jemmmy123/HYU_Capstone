@@ -30,6 +30,7 @@ import helium314.keyboard.latin.utils.ExecutorUtils;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -282,6 +283,27 @@ abstract public class ExpandableBinaryDictionary extends Dictionary {
                 false /* isBeginningOfSentence */, isNotAWord, isPossiblyOffensive, timestamp)) {
             Log.e(TAG, "Cannot add unigram entry. word: " + word);
         }
+    }
+
+    /**
+     * Remove the unigram entries and rewrite the dictionary file with garbage collection,
+     * so the removed words don't stay in the file as deleted entries.
+     */
+    public void removeUnigramEntriesAndFlushWithGC(final Collection<String> words) {
+        reloadDictionaryIfRequired();
+        asyncExecuteTaskWithWriteLock(() -> {
+            final BinaryDictionary binaryDictionary = getBinaryDictionary();
+            if (binaryDictionary == null) {
+                return;
+            }
+            boolean removed = false;
+            for (final String word : words) {
+                removed |= binaryDictionary.removeUnigramEntry(word);
+            }
+            if (removed) {
+                binaryDictionary.flushWithGC();
+            }
+        });
     }
 
     /**

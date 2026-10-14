@@ -588,6 +588,14 @@ class DictionaryFacilitatorImpl : DictionaryFacilitator {
         }
     }
 
+    override fun removeFromUserHistory(word: String) {
+        // the word may have been learned with different capitalization
+        val variants = setOf(word, word.lowercase(), word.lowercase().replaceFirstChar { it.titlecase() }, word.uppercase())
+        for (dictionaryGroup in dictionaryGroups) {
+            dictionaryGroup.getSubDict(Dictionary.TYPE_USER_HISTORY)?.removeUnigramEntriesAndFlushWithGC(variants)
+        }
+    }
+
     override fun clearUserHistoryDictionary(context: Context) {
         for (dictionaryGroup in dictionaryGroups) {
             dictionaryGroup.getSubDict(Dictionary.TYPE_USER_HISTORY)?.clear()

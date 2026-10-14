@@ -44,6 +44,7 @@ import helium314.keyboard.settings.SettingsDestination
 import helium314.keyboard.settings.preferences.SliderPreference
 import helium314.keyboard.settings.preferences.SwitchPreference
 import helium314.keyboard.latin.utils.Theme
+import helium314.keyboard.settings.dialogs.UserBlockListDialog
 import helium314.keyboard.settings.dialogs.TextInputDialog
 import helium314.keyboard.settings.preferences.BackupRestorePreference
 import helium314.keyboard.settings.preferences.LoadGestureLibPreference
@@ -65,6 +66,7 @@ fun AdvancedSettingsScreen(
     val items = listOf(
         Settings.PREF_ALWAYS_INCOGNITO_MODE,
         SettingsWithoutKey.PRIVACY_BLOCKED_STATS,
+        SettingsWithoutKey.PRIVACY_USER_BLOCK_LIST,
         Settings.PREF_KEY_LONGPRESS_TIMEOUT,
         Settings.PREF_SPACE_HORIZONTAL_SWIPE,
         Settings.PREF_SPACE_VERTICAL_SWIPE,
@@ -126,6 +128,19 @@ fun createAdvancedSettings(context: Context) = listOf(
                 resets++
             },
         )
+    },
+    Setting(context, SettingsWithoutKey.PRIVACY_USER_BLOCK_LIST, R.string.privacy_user_list_title) { setting ->
+        val ctx = LocalContext.current
+        var showDialog by rememberSaveable { mutableStateOf(false) }
+        val count = remember(showDialog) { PrivacyFilter.userBlockList(ctx).entries.size }
+        Preference(
+            name = setting.title,
+            description = if (count == 0) stringResource(R.string.privacy_user_list_summary_empty)
+                else stringResource(R.string.privacy_user_list_summary, count),
+            onClick = { showDialog = true },
+        )
+        if (showDialog)
+            UserBlockListDialog { showDialog = false }
     },
     Setting(context, Settings.PREF_KEY_LONGPRESS_TIMEOUT, R.string.prefs_key_longpress_timeout_settings) { setting ->
         SliderPreference(
@@ -323,4 +338,5 @@ private fun blockedTypeName(type: SensitiveWordDetector.Type) = when (type) {
     SensitiveWordDetector.Type.LONG_NUMBER -> "Long number"
     SensitiveWordDetector.Type.PASSWORD_LIKE -> "Password-like word"
     SensitiveWordDetector.Type.AFTER_TRIGGER_WORD -> "Word after \"password\", \"pin\", ..."
+    SensitiveWordDetector.Type.USER_LIST -> "Your own word list"
 }
