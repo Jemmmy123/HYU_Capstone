@@ -107,6 +107,7 @@ class KeyboardActionListenerImpl(private val latinIME: LatinIME, private val inp
             KeyCode.TOGGLE_AUTOCORRECT -> return settings.toggleAutoCorrect()
             KeyCode.TOGGLE_INCOGNITO_MODE -> {
                 settings.toggleAlwaysIncognitoMode()
+                KeyboardSwitcher.getInstance().setThemeNeedsReload() // reload so the incognito color is shown or removed
                 BackgroundGatheringCache.clear()
                 latinIME.setGestureDataGatheringMode(latinIME.currentInputEditorInfo, false)
                 return
