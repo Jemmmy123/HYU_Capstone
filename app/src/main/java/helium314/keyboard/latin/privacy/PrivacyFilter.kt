@@ -3,6 +3,7 @@ package helium314.keyboard.latin.privacy
 
 import android.content.Context
 import androidx.core.content.edit
+import helium314.keyboard.latin.BuildConfig
 import helium314.keyboard.latin.NgramContext
 import helium314.keyboard.latin.NgramContext.WordInfo
 import helium314.keyboard.latin.utils.Log
@@ -32,11 +33,14 @@ object PrivacyFilter {
     /** @return true if [word] must not be learned. */
     @JvmStatic
     fun shouldBlock(word: String, ngramContext: NgramContext, context: Context): Boolean {
+        val start = System.nanoTime()
         val previousWords = (1..ngramContext.prevWordCount).mapNotNull { ngramContext.getNthPrevWord(it)?.toString() }
         val userList = userBlockList(context)
         val type = word.split(' ').firstNotNullOfOrNull { SensitiveWordDetector.detect(it, previousWords, userList) }
-            ?: return false
-        countBlocked(context, type)
+        if (type != null) countBlocked(context, type)
+        // timing for the evaluation, debug builds only; never logs the word
+        if (BuildConfig.DEBUG) Log.d(TAG, "check took ${(System.nanoTime() - start) / 1000} µs, blocked: ${type != null}")
+        if (type == null) return false
         Log.i(TAG, "not learning a word of type $type")
         return true
     }
