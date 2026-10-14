@@ -10,9 +10,9 @@ import helium314.keyboard.latin.settings.Settings
 import helium314.keyboard.latin.utils.dpToPx
 import helium314.keyboard.latin.utils.prefs
 
-/** Tints the keyboard and draws a colored border while nothing is being learned, so incognito is obvious. */
+/** Tints the keyboard and draws a blue border while nothing is being learned, so incognito is obvious. */
 object IncognitoIndicator {
-    private const val COLOR = 0xFF7C3AED.toInt() // violet, stands out against every built-in theme
+    private const val COLOR = 0xFF2563EB.toInt() // blue, matches the test app and stands out against the built-in themes
     private const val TINT_ALPHA = 0x26 // about 15%, keys stay readable
     private const val BORDER_DP = 3
 
