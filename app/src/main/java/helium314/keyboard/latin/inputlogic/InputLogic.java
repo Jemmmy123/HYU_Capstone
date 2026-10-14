@@ -64,6 +64,7 @@ import helium314.keyboard.latin.utils.GestureDataGatheringKt;
 import helium314.keyboard.latin.utils.InputTypeUtils;
 import helium314.keyboard.latin.utils.IntentUtils;
 import helium314.keyboard.latin.utils.Log;
+import helium314.keyboard.latin.privacy.PrivacyFilter;
 import helium314.keyboard.latin.utils.BackgroundGatheringCache;
 import helium314.keyboard.latin.utils.RecapitalizeMode;
 import helium314.keyboard.latin.utils.RecapitalizeStatus;
@@ -1726,8 +1727,12 @@ public final class InputLogic {
             mDictionaryFacilitator.adjustConfidences(word, wasAutoCapitalized);
             return;
         }
+        if (PrivacyFilter.shouldBlock(word, ngramContext)) {
+            // sensitive word: don't learn it, and don't let it adjust confidences either
+            return;
+        }
         final int timeStampInSeconds = (int)TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis());
-        mDictionaryFacilitator.addToUserHistory(word, wasAutoCapitalized, ngramContext,
+        mDictionaryFacilitator.addToUserHistory(word, wasAutoCapitalized, PrivacyFilter.sanitize(ngramContext),
                 timeStampInSeconds, settingsValues.mBlockPotentiallyOffensive);
     }
 
@@ -1746,7 +1751,7 @@ public final class InputLogic {
         mDictionaryFacilitator.addToUserHistory(
             text,
             false,
-            mConnection.getNgramContextFromNthPreviousWord(settingsValues.mSpacingAndPunctuations, 2),
+            PrivacyFilter.sanitize(mConnection.getNgramContextFromNthPreviousWord(settingsValues.mSpacingAndPunctuations, 2)),
             (int) TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()),
             settingsValues.mBlockPotentiallyOffensive
         );

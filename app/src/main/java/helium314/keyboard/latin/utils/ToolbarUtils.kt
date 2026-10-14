@@ -137,8 +137,9 @@ val defaultToolbarPref by lazy {
             others.joinToString(Separators.ENTRY) { it.name + Separators.KV + false }
 }
 
-val defaultPinnedToolbarPref = entries.filterNot { it == CLOSE_HISTORY }.joinToString(Separators.ENTRY) {
-    it.name + Separators.KV + false
+// incognito is pinned by default, so sensitive words can be kept from learning with one tap
+val defaultPinnedToolbarPref = entries.filterNot { it == CLOSE_HISTORY }.sortedBy { it != INCOGNITO }.joinToString(Separators.ENTRY) {
+    it.name + Separators.KV + (it == INCOGNITO)
 }
 
 val defaultClipboardToolbarPref by lazy {
