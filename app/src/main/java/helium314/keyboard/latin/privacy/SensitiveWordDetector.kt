@@ -20,6 +20,12 @@ object SensitiveWordDetector {
     /** Words allowed between a trigger word and the sensitive word, e.g. "password is X". */
     private val FILLER_WORDS = setOf("is", "was", "=", ":", "-", "number", "no", "#")
 
+    /** Common short words that are never the secret themselves, e.g. "with" in "login with X". */
+    private val FUNCTION_WORDS = FILLER_WORDS + setOf(
+        "a", "an", "the", "and", "or", "to", "for", "of", "in", "on", "at", "by", "with", "from",
+        "my", "your", "our", "his", "her", "their", "me", "it", "this", "that", "are", "be",
+    )
+
     private val EMAIL = Regex("""^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$""")
     private val PARTIAL_EMAIL = Regex("""^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+$""")
     private val SSN = Regex("""^\d{3}-\d{2}-\d{4}$""")
@@ -38,6 +44,7 @@ object SensitiveWordDetector {
         val w = word.trim().trimEnd('.', ',', '!', '?', ';')
         if (w.isEmpty()) return null
         detectByShape(w)?.let { return it }
+        if (w.lowercase() in FUNCTION_WORDS) return null
         if (followsTriggerWord(previousWords)) return Type.AFTER_TRIGGER_WORD
         return null
     }

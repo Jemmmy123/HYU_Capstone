@@ -50,6 +50,10 @@ class SensitiveWordDetectorTest {
         assertEquals(Type.AFTER_TRIGGER_WORD, detect("1234", "pin"))
         assertEquals(Type.AFTER_TRIGGER_WORD, detect("bluefish", "Password:"))
         assertNull(detect("tomorrow", "it", "is", "password"))
+        // the connecting word itself is not the secret
+        assertNull(detect("is", "password", "my"))
+        assertNull(detect("with", "login"))
+        assertEquals(Type.AFTER_TRIGGER_WORD, detect("bluefish", "is", "password"))
     }
 
     @Test fun normalWordsAreLearned() {
