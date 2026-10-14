@@ -286,8 +286,8 @@ abstract public class ExpandableBinaryDictionary extends Dictionary {
     }
 
     /**
-     * Remove the unigram entries and rewrite the dictionary file with garbage collection,
-     * so the removed words don't stay in the file as deleted entries.
+     * Remove the unigram entries and rebuild the dictionary file from the remaining words,
+     * so nothing of the removed words stays in the file.
      */
     public void removeUnigramEntriesAndFlushWithGC(final Collection<String> words) {
         reloadDictionaryIfRequired();
@@ -300,10 +300,11 @@ abstract public class ExpandableBinaryDictionary extends Dictionary {
             for (final String word : words) {
                 if (binaryDictionary.removeUnigramEntry(word)) removed++;
             }
-            // Always run GC: removeUnigramEntry can mark the entry as deleted and still return false,
-            // and a deleted entry keeps its letters in the file until GC rewrites it.
-            final boolean rewritten = binaryDictionary.flushWithGC();
-            Log.i(TAG, "removed " + removed + " of " + words.size() + " variants, file rewritten: " + rewritten);
+            // GC alone keeps a removed word's PtNode (as non-terminal) in the file, so its letters stay on disk.
+            // Rebuilding the dictionary from its remaining words (same format) leaves only those words.
+            final boolean flushed = binaryDictionary.flushWithGC();
+            final boolean rebuilt = flushed && binaryDictionary.migrateTo(binaryDictionary.getFormatVersion());
+            Log.i(TAG, "removed " + removed + " of " + words.size() + " variants, flushed: " + flushed + ", rebuilt: " + rebuilt);
         });
     }
 
