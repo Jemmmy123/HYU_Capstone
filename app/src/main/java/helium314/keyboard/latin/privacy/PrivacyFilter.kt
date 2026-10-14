@@ -91,7 +91,9 @@ object PrivacyFilter {
             putString(PREF_USER_BLOCK_LIST_SALT, salt)
             putStringSet(PREF_USER_BLOCK_LIST, list.entries.map { it.serialize() }.toSet() + entry.serialize())
         }
-        wordForgetter?.forget(word.trim().trimEnd('.', ',', '!', '?', ';'))
+        val forgetter = wordForgetter
+        if (forgetter == null) Log.w(TAG, "keyboard not running, can't remove the word from what was learned")
+        else forgetter.forget(word.trim().trimEnd('.', ',', '!', '?', ';'))
         return true
     }
 

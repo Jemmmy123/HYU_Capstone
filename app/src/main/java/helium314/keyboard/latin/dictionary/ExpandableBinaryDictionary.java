@@ -296,13 +296,14 @@ abstract public class ExpandableBinaryDictionary extends Dictionary {
             if (binaryDictionary == null) {
                 return;
             }
-            boolean removed = false;
+            int removed = 0;
             for (final String word : words) {
-                removed |= binaryDictionary.removeUnigramEntry(word);
+                if (binaryDictionary.removeUnigramEntry(word)) removed++;
             }
-            if (removed) {
-                binaryDictionary.flushWithGC();
-            }
+            // Always run GC: removeUnigramEntry can mark the entry as deleted and still return false,
+            // and a deleted entry keeps its letters in the file until GC rewrites it.
+            final boolean rewritten = binaryDictionary.flushWithGC();
+            Log.i(TAG, "removed " + removed + " of " + words.size() + " variants, file rewritten: " + rewritten);
         });
     }
 
