@@ -22,6 +22,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.StringRes;
 
+import helium314.keyboard.latin.privacy.PrivacyFilter;
 import helium314.keyboard.compat.ConfigurationCompatKt;
 import helium314.keyboard.keyboard.KeyboardActionListener;
 import helium314.keyboard.keyboard.internal.PopupKeySpec;
@@ -226,7 +227,8 @@ public final class Settings implements SharedPreferences.OnSharedPreferenceChang
         return switch (key) {
             case PREF_LAST_SHOWN_EMOJI_CATEGORY_PAGE_ID, PREF_LAST_SHOWN_EMOJI_CATEGORY_ID, PREF_RECENT_EMOJIS,
                  PREF_DONT_SHOW_MISSING_DICTIONARY_DIALOG, PREF_SELECTED_SUBTYPE -> false;
-            default -> !key.startsWith(PREF_SAVED_APP_SUBTYPE_PREFIX) && !key.startsWith("floating_pos");
+            default -> !key.startsWith(PREF_SAVED_APP_SUBTYPE_PREFIX) && !key.startsWith("floating_pos")
+                    && !key.startsWith(PrivacyFilter.PREF_BLOCKED_COUNT_PREFIX); // counter only, no need to reload
         };
     }
 

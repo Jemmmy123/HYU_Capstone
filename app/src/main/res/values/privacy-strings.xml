@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- SPDX-License-Identifier: GPL-3.0-only -->
+<resources>
+    <string name="privacy_blocked_title">Blocked from learning</string>
+    <string name="privacy_blocked_none">Nothing blocked yet. Only counts are kept, never the words.</string>
+    <string name="privacy_blocked_reset_hint">Only counts are kept, never the words. Tap to reset.</string>
+</resources>

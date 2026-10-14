@@ -1727,7 +1727,7 @@ public final class InputLogic {
             mDictionaryFacilitator.adjustConfidences(word, wasAutoCapitalized);
             return;
         }
-        if (PrivacyFilter.shouldBlock(word, ngramContext)) {
+        if (PrivacyFilter.shouldBlock(word, ngramContext, mLatinIME)) {
             // sensitive word: don't learn it, and don't let it adjust confidences either
             return;
         }

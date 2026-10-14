@@ -9,7 +9,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
@@ -23,6 +25,8 @@ import helium314.keyboard.latin.BuildConfig
 import helium314.keyboard.latin.R
 import helium314.keyboard.latin.SystemBroadcastReceiver
 import helium314.keyboard.latin.common.splitOnWhitespace
+import helium314.keyboard.latin.privacy.PrivacyFilter
+import helium314.keyboard.latin.privacy.SensitiveWordDetector
 import helium314.keyboard.latin.settings.DebugSettings
 import helium314.keyboard.latin.settings.Defaults
 import helium314.keyboard.latin.settings.Settings
@@ -60,6 +64,7 @@ fun AdvancedSettingsScreen(
         Log.v("irrelevant", "stupid way to trigger recomposition on preference change")
     val items = listOf(
         Settings.PREF_ALWAYS_INCOGNITO_MODE,
+        SettingsWithoutKey.PRIVACY_BLOCKED_STATS,
         Settings.PREF_KEY_LONGPRESS_TIMEOUT,
         Settings.PREF_SPACE_HORIZONTAL_SWIPE,
         Settings.PREF_SPACE_VERTICAL_SWIPE,
@@ -104,6 +109,23 @@ fun createAdvancedSettings(context: Context) = listOf(
         R.string.incognito, R.string.prefs_force_incognito_mode_summary)
     {
         SwitchPreference(it, Defaults.PREF_ALWAYS_INCOGNITO_MODE) { KeyboardSwitcher.getInstance().setThemeNeedsReload() }
+    },
+    Setting(context, SettingsWithoutKey.PRIVACY_BLOCKED_STATS, R.string.privacy_blocked_title) { setting ->
+        val ctx = LocalContext.current
+        var resets by remember { mutableIntStateOf(0) }
+        val counts = remember(resets) { PrivacyFilter.readBlockedCounts(ctx) }
+        val description = if (counts.isEmpty()) stringResource(R.string.privacy_blocked_none)
+            else counts.entries.joinToString("\n", postfix = "\n" + stringResource(R.string.privacy_blocked_reset_hint)) {
+                "${blockedTypeName(it.key)}: ${it.value}"
+            }
+        Preference(
+            name = setting.title,
+            description = description,
+            onClick = {
+                PrivacyFilter.resetBlockedCounts(ctx)
+                resets++
+            },
+        )
     },
     Setting(context, Settings.PREF_KEY_LONGPRESS_TIMEOUT, R.string.prefs_key_longpress_timeout_settings) { setting ->
         SliderPreference(
@@ -291,4 +313,14 @@ private fun Preview() {
             AdvancedSettingsScreen { }
         }
     }
+}
+
+private fun blockedTypeName(type: SensitiveWordDetector.Type) = when (type) {
+    SensitiveWordDetector.Type.CARD_NUMBER -> "Card number"
+    SensitiveWordDetector.Type.PHONE_NUMBER -> "Phone number"
+    SensitiveWordDetector.Type.EMAIL -> "Email"
+    SensitiveWordDetector.Type.SSN -> "SSN"
+    SensitiveWordDetector.Type.LONG_NUMBER -> "Long number"
+    SensitiveWordDetector.Type.PASSWORD_LIKE -> "Password-like word"
+    SensitiveWordDetector.Type.AFTER_TRIGGER_WORD -> "Word after \"password\", \"pin\", ..."
 }
