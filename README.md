@@ -1,3 +1,40 @@
+# HYU_Capstone: 민감정보를 학습하지 않는 키보드
+
+오픈소스 안드로이드 키보드 [HeliBoard](https://github.com/Helium314/HeliBoard)를 수정해,
+비밀번호·카드번호·이메일 같은 민감정보가 키보드의 학습 사전(user history dictionary)에 저장되지 않도록 한 캡스톤 프로젝트입니다.
+원본 HeliBoard 커밋 `0c60dff` 위에 변경 사항을 추가했으며, 아래 원본 README는 그대로 두었습니다.
+
+## 주요 기능
+- **민감 단어 탐지 후 학습 차단** (`app/src/main/java/helium314/keyboard/latin/privacy/`)
+  - 카드번호(Luhn 검사), 전화번호, 이메일, 비밀번호 형태(대소문자·숫자·기호 조합, 단어+숫자, leetspeak), 긴 숫자
+  - "password is X", "login with X", "the code is X"처럼 트리거 단어 뒤에 오는 단어
+  - `Tiger!42`처럼 기호로 나뉜 덩어리는 공백이 올 때까지 기다렸다가 전체를 검사
+  - 민감 단어는 다음 단어 예측용 문맥(n-gram)에서도 제외
+- **사용자 단어 목록 (Words never to learn)**: 사용자가 직접 추가한 단어는 학습하지 않으며, 단어 대신 salt+SHA-256 해시와 마스크(`b•••••••`)만 저장. 추가할 때 이미 학습된 단어는 사전에서 지우고 파일을 재구성
+- **차단 통계**: 설정 → Advanced에서 종류별 차단 개수 확인 (단어는 저장하지 않음)
+- **시크릿 모드 표시**: 학습이 꺼져 있으면 키보드 영역이 파란색으로 표시
+- 탐지 규칙은 현재 영어 입력 기준
+
+## 구성
+| 경로 | 내용 |
+|---|---|
+| `app/src/main/java/helium314/keyboard/latin/privacy/` | 탐지(`SensitiveWordDetector`), 학습 필터(`PrivacyFilter`), 사용자 목록(`UserBlockList`), 시크릿 표시(`IncognitoIndicator`) |
+| `app/src/test/java/helium314/keyboard/latin/privacy/` | 단위 테스트 |
+| `KeyboardTestApp/` | 키보드를 시험하기 위한 테스트 앱 (별도 Gradle 프로젝트) |
+
+## 빌드
+```
+./gradlew assembleDebug                                   # 키보드 (패키지 helium314.keyboard.debug)
+./gradlew testDebugUnitTest --tests "*privacy*"           # 단위 테스트
+cd KeyboardTestApp && ./gradlew assembleDebug             # 테스트 앱
+```
+Android SDK 플랫폼 37, NDK 28.0.13004108, JDK 17 이상(Android Studio 내장 JBR 사용 가능)이 필요합니다.
+
+## 라이선스와 출처
+원본 [HeliBoard](https://github.com/Helium314/HeliBoard)(Helium314 외 기여자)를 기반으로 하며, 원본과 같은 **GPL-3.0** 라이선스를 따릅니다.
+
+---
+
 # HeliBoard
 HeliBoard is a privacy-conscious and customizable open-source keyboard, based on AOSP / OpenBoard.
 Does not use internet permission, and thus is 100% offline.
