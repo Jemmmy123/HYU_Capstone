@@ -46,6 +46,7 @@ import helium314.keyboard.latin.LatinIME;
 import helium314.keyboard.latin.R;
 import helium314.keyboard.latin.RichInputMethodManager;
 import helium314.keyboard.latin.RichInputMethodSubtype;
+import helium314.keyboard.latin.privacy.IncognitoIndicator;
 import helium314.keyboard.latin.settings.Settings;
 import helium314.keyboard.latin.settings.SettingsKt;
 import helium314.keyboard.latin.settings.SettingsValues;
@@ -175,6 +176,13 @@ public final class KeyboardSwitcher {
                 Log.e(TAG, "even fallback to defaults failed: " + e2.getKeyboardId(), e2.getCause());
             }
         }
+        updateIncognitoIndicator(); // learning may be off for this input field
+    }
+
+    /** Shows or removes the incognito color on the keyboard, see {@link IncognitoIndicator}. */
+    public void updateIncognitoIndicator() {
+        if (mMainKeyboardFrame != null)
+            IncognitoIndicator.apply(mMainKeyboardFrame);
     }
 
     public void saveKeyboardState() {

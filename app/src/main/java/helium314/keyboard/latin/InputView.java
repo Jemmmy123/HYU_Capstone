@@ -19,7 +19,6 @@ import androidx.core.view.ViewKt;
 import helium314.keyboard.accessibility.AccessibilityUtils;
 import helium314.keyboard.keyboard.MainKeyboardView;
 import helium314.keyboard.latin.common.ColorType;
-import helium314.keyboard.latin.privacy.IncognitoIndicator;
 import helium314.keyboard.latin.settings.Settings;
 import helium314.keyboard.latin.suggestions.MoreSuggestionsView;
 import helium314.keyboard.latin.suggestions.SuggestionStripView;
@@ -109,7 +108,6 @@ public final class InputView extends FrameLayout {
 
     private Unit onNextLayout(View v) {
         Settings.getValues().mColors.setBackground(findViewById(R.id.main_keyboard_frame), ColorType.MAIN_BACKGROUND);
-        IncognitoIndicator.apply(this);
 
         // Work around inset application being unreliable
         requestApplyInsets();
